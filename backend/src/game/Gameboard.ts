@@ -13,7 +13,6 @@ class Gameboard {
   }
 
   public placeShip(placement: Placement) {
-    console.log('placing ship');
     if (!this._isValidPlacement(placement))
       throw Error('Not a valid placement');
     const { start, shipLength, direction } = placement;

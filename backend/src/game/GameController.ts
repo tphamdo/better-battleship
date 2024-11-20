@@ -57,15 +57,12 @@ class GameController {
     coord: Coordinate;
     player: Player;
   }): AttackResult {
-    console.log('turn', this._turn);
     if (this._activePlayer !== player)
       return AttackResult.NOT_YOUR_TURN;
 
     try {
       const attackResult: AttackResult = this._waitingPlayer.receiveAttack(coord);
-      console.log('turn', this._turn);
       this._switchPlayerTurn();
-      console.log('turn', this._turn);
       return attackResult;
     } catch (error) {
       return AttackResult.INTERNAL_ERROR;
@@ -78,7 +75,6 @@ class GameController {
   }
 
   private get _activePlayer(): Player {
-    console.log(this._turn, PLAYER.P1, PLAYER.P2);
     return this._turn === PLAYER.P1 ? this.player1 : this.player2;
   }
 
