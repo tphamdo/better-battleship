@@ -2,8 +2,8 @@ import Player from './Player';
 import { Placement, Coordinate, AttackResult as _AttackResult } from './Gameboard';
 
 class GameController {
-  private _player1: Player;
-  private _player2: Player;
+  readonly player1: Player;
+  readonly player2: Player;
   private _turn: PLAYER;
 
   static readonly SHIP_SIZES = [
@@ -14,29 +14,29 @@ class GameController {
   ];
 
   constructor() {
-    this._player1 = new Player({});
-    this._player2 = new Player({});
+    this.player1 = new Player({});
+    this.player2 = new Player({});
     this._turn = PLAYER.P1;
   }
 
   get isGameOver(): boolean {
-    return this._player1.isLost || this._player2.isLost;
+    return this.player1.isLost || this.player2.isLost;
   }
 
   public player1PlaceShip(placement: Placement): PlaceShipResult {
-    return this._placeShip({ player: this._player1, placement });
+    return this._placeShip({ player: this.player1, placement });
   }
 
   public player2PlaceShip(placement: Placement): PlaceShipResult {
-    return this._placeShip({ player: this._player2, placement });
+    return this._placeShip({ player: this.player2, placement });
   }
 
   public player1Attack(coord: Coordinate): AttackResult {
-    return this._playTurn({ coord, player: this._player1 });
+    return this._playTurn({ coord, player: this.player1 });
   }
 
   public player2Attack(coord: Coordinate): AttackResult {
-    return this._playTurn({ coord, player: this._player2 });
+    return this._playTurn({ coord, player: this.player2 });
   }
 
   private _placeShip({ player, placement }: {
@@ -57,12 +57,15 @@ class GameController {
     coord: Coordinate;
     player: Player;
   }): AttackResult {
+    console.log('turn', this._turn);
     if (this._activePlayer !== player)
       return AttackResult.NOT_YOUR_TURN;
 
     try {
       const attackResult: AttackResult = this._waitingPlayer.receiveAttack(coord);
+      console.log('turn', this._turn);
       this._switchPlayerTurn();
+      console.log('turn', this._turn);
       return attackResult;
     } catch (error) {
       return AttackResult.INTERNAL_ERROR;
@@ -75,11 +78,12 @@ class GameController {
   }
 
   private get _activePlayer(): Player {
-    return this._turn === PLAYER.P1 ? this._player1 : this._player2;
+    console.log(this._turn, PLAYER.P1, PLAYER.P2);
+    return this._turn === PLAYER.P1 ? this.player1 : this.player2;
   }
 
   private get _waitingPlayer(): Player {
-    return this._turn === PLAYER.P1 ? this._player2 : this._player1;
+    return this._turn === PLAYER.P1 ? this.player2 : this.player1;
   }
 }
 
@@ -97,7 +101,7 @@ export enum AttackError {
   INTERNAL_ERROR = 'Internal error',
   NOT_YOUR_TURN = 'Not your turn',
 }
-type AttackResult = AttackError | _AttackResult;
+export type AttackResult = AttackError | _AttackResult;
 export const AttackResult = { ...AttackError, ..._AttackResult };
 
 export { Coordinate, Direction } from './Gameboard';

@@ -1,66 +1,104 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import Gameboard, { CellValue, Direction } from './GameBoard'
+import { Socket } from 'socket.io-client'
 
-const props = defineProps(['socket'])
-const { socket } = props;
-
-onMounted(() => {
-  document.addEventListener('keyup', (event) => {
-    if (event.code === 'Space' && onBoard) {
-      //change direction
-      onHoverLeave(lastHoveredCoords)
-      gb.changeDirection();
-      onHover(lastHoveredCoords)
-    }
-  })
+const props = defineProps({
+  socket: Socket,
+  myBoard: {
+    type: Boolean,
+    default: false,
+  },
+  opponentBoard: {
+    type: Boolean,
+    default: false,
+  },
 })
-
-const gb = new Gameboard({ socket });
-const board = gb.board;
-
-const gameStarted = false
-let onBoard = false
+const { socket, myBoard, opponentBoard } = props
+const gb = new Gameboard({ socket })
+const gameStarted = ref(false)
+let mouseOnBoard = false
 let lastHoveredCoords: Coordinate | null = null
 
-function placeShip({ x, y }: Coordinate) {
-  if (!gameStarted) {
-    gb.placeShip({ x, y });
+onMounted(() => {
+  if (myBoard) {
+    window.addEventListener('keydown', (event) => {
+      if (
+        event.code === 'Space' &&
+        event.target === document.body &&
+        mouseOnBoard &&
+        lastHoveredCoords &&
+        !gameStarted.value
+      ) {
+        event.preventDefault()
+        gb.resetAllHover()
+        gb.changeDirection()
+        onHover(lastHoveredCoords)
+      }
+    })
+
+    socket.on('all done placing', () => {
+      console.log('all done placing')
+      gameStarted.value = true
+    })
   }
+})
+
+function onCellClick({ x, y }: Coordinate) {
+  if (myBoard && !gameStarted.value) gb.placeShip({ x, y })
+  else if (opponentBoard) gb.sendAttack({ x, y })
 }
 
 function onHover({ x, y }: Coordinate) {
-  if (!gameStarted && gb.curShip) {
+  if (myBoard && !gameStarted.value && gb.curShip) {
     lastHoveredCoords = { x, y }
-    if (gb.isValidPlacement({ start: { x, y }, shipLength: gb.curShip.len, direction: gb.direction })) {
-      for (let i = 0; i < gb.curShip.len; ++i) {
-        if (gb.direction === Direction.DOWN) board.value[y + i][x] = CellValue.HOVER
-        else board.value[y][x + i] = CellValue.HOVER
-      }
+    const placement: Placement = {
+      start: { x, y },
+      shipLength: gb.curShip.len,
+      direction: gb.direction,
+    }
+    if (gb.isValidPlacement(placement)) {
+      setPlacementTo(placement, CellValue.HOVER)
     }
   }
 }
 
 function onHoverLeave({ x, y }: Coordinate) {
-  if (!gameStarted && gb.curShip) {
-    if (gb.isValidPlacement({ start: { x, y }, shipLength: gb.curShip.len, direction: gb.direction })) {
-      for (let i = 0; i < gb.curShip.len; ++i) {
-        if (gb.direction === Direction.DOWN) board.value[y + i][x] = CellValue.EMPTY
-        else board.value[y][x + i] = CellValue.EMPTY
-      }
+  if (myBoard && !gameStarted.value && gb.curShip) {
+    const placement: Placement = {
+      start: { x, y },
+      shipLength: gb.curShip.len,
+      direction: gb.direction,
     }
+    if (gb.isValidPlacement(placement)) {
+      setPlacementTo(placement, CellValue.EMPTY)
+    }
+  }
+}
+
+function setPlacementTo(placement: Placement, cellValue: CellValue) {
+  const {
+    start: { x, y },
+    shipLength,
+    direction,
+  } = placement
+  for (let i = 0; i < shipLength; ++i) {
+    if (direction === Direction.DOWN) gb.board.value[y + i][x] = cellValue
+    else gb.board.value[y][x + i] = cellValue
   }
 }
 </script>
 
 <template>
-  <table class="board" @mouseover="onBoard = true" @mouseleave="onBoard = false">
-    <tr v-for="(row, y) in board" :key="y">
+  <table class="board" @mouseover="mouseOnBoard = true" @mouseleave="mouseOnBoard = false">
+    <tr v-for="(row, y) in gb.board.value" :key="y">
       <td class="table-success" v-for="(col, x) in row" :key="x">
-        <div :class="{ hovered: board[y][x] === CellValue.HOVER, ship: board[y][x] === CellValue.SHIP }"
-          @click="placeShip({ x, y })" @mouseover="onHover({ x, y })" @mouseleave="onHoverLeave({ x, y })" class="cell">
-          {{ board[y][x] }}
+        <div :class="{
+          hovered: gb.board.value[y][x] === CellValue.HOVER,
+          ship: gb.board.value[y][x] === CellValue.SHIP,
+        }" @click="onCellClick({ x, y })" @mouseover="onHover({ x, y })" @mouseleave="onHoverLeave({ x, y })"
+          class="cell">
+          <!-- {{ gb.board.value[y][x] }} -->
         </div>
       </td>
     </tr>
@@ -74,6 +112,7 @@ function onHoverLeave({ x, y }: Coordinate) {
   aspect-ratio: 1 / 1;
   border: 1px solid blue;
   border-collapse: collapse;
+  font-family: monospace;
 }
 
 @media screen and (min-width: 400px) {

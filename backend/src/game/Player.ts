@@ -2,7 +2,7 @@ import Gameboard from './Gameboard';
 import { Placement, Coordinate, AttackResult } from './Gameboard';
 
 class Player {
-  private _gameboard: Gameboard;
+  readonly gameboard: Gameboard;
   readonly name: String;
   readonly isComputer: boolean;
 
@@ -15,22 +15,23 @@ class Player {
     boardSize?: number;
     isComputer?: boolean;
   }) {
-    this._gameboard = new Gameboard(boardSize);
+    this.gameboard = new Gameboard(boardSize);
     this.name = name;
     this.isComputer = isComputer;
   }
 
   public placeShip(placement: Placement) {
-    this._gameboard.placeShip(placement);
+    this.gameboard.placeShip(placement);
   }
 
   public receiveAttack(coord: Coordinate): AttackResult {
-    return this._gameboard.receiveAttack(coord);
+    return this.gameboard.receiveAttack(coord);
   }
 
   get isLost(): boolean {
-    return this._gameboard.allShipsSunk();
+    return this.gameboard.allShipsSunk();
   }
+
 }
 
 export default Player;
