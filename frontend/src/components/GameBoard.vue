@@ -96,6 +96,8 @@ function setPlacementTo(placement: Placement, cellValue: CellValue) {
         <div :class="{
           hovered: gb.board.value[y][x] === CellValue.HOVER,
           ship: gb.board.value[y][x] === CellValue.SHIP,
+          hit: gb.board.value[y][x] === CellValue.HIT,
+          miss: gb.board.value[y][x] === CellValue.MISS,
         }" @click="onCellClick({ x, y })" @mouseover="onHover({ x, y })" @mouseleave="onHoverLeave({ x, y })"
           class="cell">
           <!-- {{ gb.board.value[y][x] }} -->
@@ -141,5 +143,13 @@ td {
 
 .ship {
   background-color: red;
+}
+
+.hit {
+  background-color: green;
+}
+
+.miss {
+  background-color: rebeccapurple;
 }
 </style>

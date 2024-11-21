@@ -57,7 +57,7 @@ class Gameboard {
   }
 
   public sendAttack({ x, y }: Coordinate) {
-    this._socket.timeout(1000).emit('send attack', { coord: { x, y } }, (err: Error, response: AttackResponse) => {
+    this._socket.timeout(1000).emit('send attack', { coordinate: { x, y } }, (err: Error, response: AttackResponse) => {
       if (err) {
         // the server did not acknowledge the event in the given delay
         console.log('too slow', err);

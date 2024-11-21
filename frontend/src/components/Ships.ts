@@ -7,10 +7,10 @@ export class Ship {
 
 export default class Ships {
   private _SHIPS: Ship[] = [
-    new Ship(5),
-    new Ship(4),
-    new Ship(3),
-    new Ship(3),
+    // new Ship(5),
+    // new Ship(4),
+    // new Ship(3),
+    // new Ship(3),
     new Ship(2),
   ];
   private _idx = 0;
