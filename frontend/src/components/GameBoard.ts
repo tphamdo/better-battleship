@@ -14,7 +14,7 @@ class Gameboard {
     this.size = size
     this.board = ref(Array(size)
       .fill(null)
-      .map((_) => new Array(size).fill(CellValue.EMPTY)));
+      .map(() => new Array(size).fill(CellValue.EMPTY)));
     this._socket = socket
     this._direction = Direction.DOWN
   }

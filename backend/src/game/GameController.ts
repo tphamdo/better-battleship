@@ -100,6 +100,6 @@ export enum AttackError {
 export type AttackResult = AttackError | _AttackResult;
 export const AttackResult = { ...AttackError, ..._AttackResult };
 
-export { Coordinate, Direction } from './Gameboard';
+export { Coordinate, Direction, Placement } from './Gameboard';
 
 export default GameController;

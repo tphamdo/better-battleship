@@ -1,29 +1,28 @@
 <script setup lang="ts">
 import GameBoard from '../components/GameBoard.vue'
-import { ref } from 'vue'
-import { io } from 'socket.io-client'
+import { socket, state } from '../socket';
+import { useRouter } from 'vue-router';
+import { watch } from 'vue';
 
-const connected = ref(false)
-const socket = io('http://localhost:3000/')
-socket.on('connect', () => {
-  console.log('connected with', socket.id)
-  connected.value = true
-})
-socket.on('disconnect', (reason) => {
-  console.log('disconnected with reason', reason)
-  connected.value = false
-})
+const router = useRouter();
+
+socket.emit('is in game', (res) => {
+  console.log('is in game', res);
+  if (!res.inGame) router.push('/');
+});
+
+watch(() => state.opponentDisconnected, (disconnected) => {
+  if (disconnected) router.push('/');
+  state.opponentDisconnected = false;
+});
 </script>
 
 <template>
   <main>
-    <div v-if="connected" class="boards">
-      <GameBoard :socket="socket" :my-board="true" />
-      <GameBoard :socket="socket" :opponent-board="true" />
+    <div class="boards">
+      <GameBoard :my-board="true" />
+      <GameBoard :opponent-board="true" />
     </div>
-    <template v-else>
-      <p>Connecting...</p>
-    </template>
   </main>
 </template>
 

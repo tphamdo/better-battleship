@@ -1,4 +1,4 @@
-import GameController from './game/GameController';
+import GameController, { Coordinate, AttackResult, Placement } from './game/GameController';
 import { nanoid } from 'nanoid';
 
 class GamesManager {
@@ -9,32 +9,66 @@ class GamesManager {
   addPlayer({ playerId }: { playerId: string }) {
     const player = { id: playerId };
     this.players.set(playerId, player);
-    this.playerQueue.push(player);
-
-    this.maybeCreateGame();
   }
 
-  removePlayer({ playerId }: { playerId: string }) {
-    this.players.delete(playerId);
-    this.playerQueue = this.playerQueue.filter((p) => p.id != playerId);
+  addPlayerToGameQueue({ playerId }: { playerId: string }) {
+    const player = this.getPlayer({ playerId });
+    if (player) {
+      this.playerQueue.push(player);
+      this.maybeCreateGame();
+    }
   }
 
   getPlayer({ playerId }: { playerId: string }): Player | undefined {
     return this.players.get(playerId);
   }
 
+  // if player was in a game, return that game
+  removePlayer({ playerId }: { playerId: string }): Game | undefined {
+    const game = this.getGame({ playerId });
+    this.players.delete(playerId);
+    this.playerQueue = this.playerQueue.filter((p) => p.id != playerId);
+    return game;
+  }
+
+  playerInQueue({ playerId }: { playerId: string }): boolean {
+    const player = this.getPlayer({ playerId });
+    if (!player) return false;
+    return this.playerQueue.find(p => p === player) ? true : false;
+  }
+
   getGame({ playerId }: { playerId: string }): Game | undefined {
     const player = this.getPlayer({ playerId });
+    console.log(player);
     if (!player || !player.gameId) return undefined;
     return this.games.get(player.gameId);
   }
 
-  setDonePlacing({ playerId }: { playerId: string }) {
+  removeGame({ gameId }: { gameId: string }) {
+    this.games.delete(gameId);
+  }
+
+  isInGame({ playerId }: { playerId: string }): boolean {
+    return this.getGame({ playerId }) !== undefined;
+  }
+
+  placeShip({ playerId, placement }: { playerId: string, placement: Placement }) {
+    const player = this.getPlayer({ playerId });
+    const game = this.getGame({ playerId });
+    if (!game || !player) return;
+
+    if (player === game.player1) game.gc.player1PlaceShip(placement);
+    else game.gc.player2PlaceShip(placement);
+    console.log(game.gc.player1.gameboard.toString());
+    console.log(game.gc.player2.gameboard.toString());
+  }
+
+  setDonePlacing({ playerId }: { playerId: string }): void {
     const player = this.getPlayer({ playerId });
     const game = this.getGame({ playerId });
     if (!player || !game) return;
     if (player === game.player1) game.player1DonePlacing = true;
-    if (player === game.player2) game.player2DonePlacing = true;
+    else game.player2DonePlacing = true;
   }
 
   allDonePlacing({ playerId }: { playerId: string }): boolean {
@@ -42,6 +76,24 @@ class GamesManager {
     const game = this.getGame({ playerId });
     if (!game) return false;
     return game.player1DonePlacing && game.player2DonePlacing;
+  }
+
+  sendAttack({ playerId, coordinate }: { playerId: string, coordinate: Coordinate }): AttackResult | null {
+    const player = this.getPlayer({ playerId });
+    const game = this.getGame({ playerId });
+    if (!player || !game) return null;
+    if (player === game.player1) return game.gc.player1Attack(coordinate)
+    else return game.gc.player2Attack(coordinate)
+  }
+
+  print() {
+    console.log('');
+    console.log('-----GamesManager-----');
+    console.log('players', this.players);
+    console.log('games', this.games);
+    console.log('playerQueue', this.playerQueue);
+    console.log('-----GamesManager-----');
+    console.log('');
   }
 
   private maybeCreateGame() {
@@ -84,4 +136,4 @@ function createGame({ player1, player2 }: { player1: Player; player2: Player }):
   };
 }
 
-export default GamesManager;
+export default new GamesManager();

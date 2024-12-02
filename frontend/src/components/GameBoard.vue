@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import Gameboard, { CellValue, Direction } from './GameBoard'
-import { Socket } from 'socket.io-client'
+import { socket } from '../socket';
 
 const props = defineProps({
-  socket: Socket,
   myBoard: {
     type: Boolean,
     default: false,
@@ -14,7 +13,7 @@ const props = defineProps({
     default: false,
   },
 })
-const { socket, myBoard, opponentBoard } = props
+const { myBoard, opponentBoard } = props
 const gb = new Gameboard({ socket })
 const gameStarted = ref(false)
 let mouseOnBoard = false
@@ -37,16 +36,16 @@ onMounted(() => {
       }
     })
 
-    socket.on('all done placing', () => {
-      console.log('all done placing')
-      gameStarted.value = true
-    })
+    // socket.on('all done placing', () => {
+    //   console.log('all done placing')
+    //   gameStarted.value = true
+    // })
   }
 })
 
 function onCellClick({ x, y }: Coordinate) {
   if (myBoard && !gameStarted.value) gb.placeShip({ x, y })
-  else if (opponentBoard) gb.sendAttack({ x, y })
+  else if (opponentBoard && gameStarted.value) gb.sendAttack({ x, y })
 }
 
 function onHover({ x, y }: Coordinate) {
@@ -87,10 +86,15 @@ function setPlacementTo(placement: Placement, cellValue: CellValue) {
     else gb.board.value[y][x + i] = cellValue
   }
 }
+
+function setMouseOnBoard(onBoard: boolean) {
+  mouseOnBoard = onBoard;
+}
+
 </script>
 
 <template>
-  <table class="board" @mouseover="mouseOnBoard = true" @mouseleave="mouseOnBoard = false">
+  <table class="board" @mouseover="setMouseOnBoard(true)" @mouseleave="setMouseOnBoard(false)">
     <tr v-for="(row, y) in gb.board.value" :key="y">
       <td class="table-success" v-for="(col, x) in row" :key="x">
         <div :class="{
@@ -100,7 +104,6 @@ function setPlacementTo(placement: Placement, cellValue: CellValue) {
           miss: gb.board.value[y][x] === CellValue.MISS,
         }" @click="onCellClick({ x, y })" @mouseover="onHover({ x, y })" @mouseleave="onHoverLeave({ x, y })"
           class="cell">
-          <!-- {{ gb.board.value[y][x] }} -->
         </div>
       </td>
     </tr>

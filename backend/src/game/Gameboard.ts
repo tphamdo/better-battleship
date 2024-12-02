@@ -53,6 +53,24 @@ class Gameboard {
     );
   }
 
+  public toString(): string {
+    let res = '';
+    for (let y = 0; y < this.size; ++y) {
+      for (let x = 0; x < this.size; ++x) {
+        switch (this.board[y][x].cellValue) {
+          case CellValue.SHIP:
+            res += 'S';
+            break;
+          case CellValue.EMPTY:
+            res += '0';
+            break;
+        }
+      }
+      res += '\n';
+    }
+    return res;
+  }
+
   private _isValidPlacement(placement: Placement): boolean {
     const { start, shipLength, direction } = placement;
     console.log(start);
