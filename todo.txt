@@ -1,4 +1,8 @@
-update myBoard to show hits/misses from opponent
-add playAgain button after game over
-change game over/game start to show only when true
-remove red border
+-update myBoard to show hits/misses from opponent (priority 1)
+-add playAgain button after game over
+-change game over/game start to show only when true
+-remove red border
+
+stretch:
+-add computer mode
+
