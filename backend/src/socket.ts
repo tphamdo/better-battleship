@@ -31,8 +31,12 @@ export function startGameServer(server: httpServer) {
         const socket1 = sockets.get(game.player1.id);
         const socket2 = sockets.get(game.player2.id);
 
-        if (socket1) io.to(socket1.id).emit('found game');
-        if (socket2) io.to(socket2.id).emit('found game');
+        if (socket1 && socket2) {
+          socket1.join(`game: ${game.id}`);
+          socket2.join(`game: ${game.id}`);
+
+          io.to(`game: ${game.id}`).emit('found game');
+        }
       }
       gm.print();
     });
@@ -53,6 +57,16 @@ export function startGameServer(server: httpServer) {
       gm.placeShip({ playerId, placement: msg.placement });
     });
 
+    socket.on('done placing', () => {
+      const playerId = socket.id;
+      gm.setDonePlacing({ playerId });
+      const game = gm.getGame({ playerId });
+
+      if (game && gm.allDonePlacing({ gameId: game.id })) {
+        io.to(`game: ${game.id}`).emit('all done placing');
+      }
+    });
+
     socket.on('send attack', (msg, callback) => {
       console.log('got attack', msg);
       if (!msg.coordinate) {
@@ -67,7 +81,9 @@ export function startGameServer(server: httpServer) {
       }
 
       callback({ status: { ok: true }, attackResult });
-      // TODO: emit game over if game over
+
+      const gameId = gm.getGameId({ playerId });
+      if (gameId && gm.isGameOver({ gameId })) io.to(`game: ${gameId}`).emit('game over');
     });
 
     socket.on('end', () => {

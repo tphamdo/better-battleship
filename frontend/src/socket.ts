@@ -7,7 +7,16 @@ export const state = reactive({
   foundGame: false,
   opponentDisconnected: false,
   gameStarted: false,
+  gameOver: false,
 });
+
+function resetState() {
+  state.connected = false;
+  state.foundGame = false;
+  state.opponentDisconnected = false;
+  state.gameStarted = false;
+  state.gameOver = false;
+}
 
 socket.on('connect', () => {
   state.connected = true;
@@ -22,6 +31,11 @@ socket.on('found game', () => {
 socket.on('all done placing', () => {
   console.log('all done placing');
   state.gameStarted = true;
+})
+
+socket.on('game over', () => {
+  console.log('game over');
+  state.gameOver = true;
 })
 
 socket.on('opponent disconnected', () => {

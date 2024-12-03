@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, computed } from 'vue'
 import Gameboard, { CellValue, Direction } from './GameBoard'
-import { socket } from '../socket';
+import { socket, state } from '../socket';
 
 const props = defineProps({
   myBoard: {
@@ -15,7 +15,9 @@ const props = defineProps({
 })
 const { myBoard, opponentBoard } = props
 const gb = new Gameboard({ socket })
-const gameStarted = ref(false)
+const gameStarted = computed(() => state.gameStarted);
+const gameOver = computed(() => state.gameOver);
+
 let mouseOnBoard = false
 let lastHoveredCoords: Coordinate | null = null
 
@@ -35,17 +37,14 @@ onMounted(() => {
         onHover(lastHoveredCoords)
       }
     })
-
-    // socket.on('all done placing', () => {
-    //   console.log('all done placing')
-    //   gameStarted.value = true
-    // })
   }
 })
 
 function onCellClick({ x, y }: Coordinate) {
-  if (myBoard && !gameStarted.value) gb.placeShip({ x, y })
-  else if (opponentBoard && gameStarted.value) gb.sendAttack({ x, y })
+  if (!gameOver.value) {
+    if (myBoard && !gameStarted.value) gb.placeShip({ x, y })
+    else if (opponentBoard && gameStarted.value) gb.sendAttack({ x, y })
+  }
 }
 
 function onHover({ x, y }: Coordinate) {
@@ -94,7 +93,8 @@ function setMouseOnBoard(onBoard: boolean) {
 </script>
 
 <template>
-  <table class="board" @mouseover="setMouseOnBoard(true)" @mouseleave="setMouseOnBoard(false)">
+  <table class="board" :class="{ myBoard, opponentBoard, gameActive: !gameOver }" @mouseover="setMouseOnBoard(true)"
+    @mouseleave="setMouseOnBoard(false)">
     <tr v-for="(row, y) in gb.board.value" :key="y">
       <td class="table-success" v-for="(col, x) in row" :key="x">
         <div :class="{
@@ -140,6 +140,14 @@ td {
   align-items: center;
 }
 
+.gameActive.opponentBoard .cell:not(.miss):not(.hit):hover {
+  cursor: pointer;
+}
+
+.gameActive.myBoard .cell {
+  cursor: pointer;
+}
+
 .hovered {
   background-color: blue;
 }
@@ -155,4 +163,4 @@ td {
 .miss {
   background-color: rebeccapurple;
 }
-</style>
+</style>y

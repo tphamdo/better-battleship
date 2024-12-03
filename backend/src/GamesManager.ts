@@ -37,11 +37,22 @@ class GamesManager {
     return this.playerQueue.find(p => p === player) ? true : false;
   }
 
-  getGame({ playerId }: { playerId: string }): Game | undefined {
+  getGameId({ playerId }: { playerId: string }): string | undefined {
     const player = this.getPlayer({ playerId });
-    console.log(player);
     if (!player || !player.gameId) return undefined;
-    return this.games.get(player.gameId);
+    return player.gameId;
+  }
+
+  getGame({ gameId, playerId }: { gameId?: string, playerId?: string }): Game | undefined {
+    if (gameId) {
+      return this.games.get(gameId);
+    } else if (playerId) {
+      const player = this.getPlayer({ playerId });
+      if (!player || !player.gameId) return undefined;
+      return this.games.get(player.gameId);
+    } else {
+      return undefined;
+    }
   }
 
   removeGame({ gameId }: { gameId: string }) {
@@ -50,6 +61,13 @@ class GamesManager {
 
   isInGame({ playerId }: { playerId: string }): boolean {
     return this.getGame({ playerId }) !== undefined;
+  }
+
+  isGameOver({ gameId }: { gameId: string }): boolean {
+    const game = this.getGame({ gameId });
+    if (!game) return false;
+
+    return game.gc.isGameOver;
   }
 
   placeShip({ playerId, placement }: { playerId: string, placement: Placement }) {
@@ -71,9 +89,8 @@ class GamesManager {
     else game.player2DonePlacing = true;
   }
 
-  allDonePlacing({ playerId }: { playerId: string }): boolean {
-    console.log('all done placing');
-    const game = this.getGame({ playerId });
+  allDonePlacing({ gameId }: { gameId: string }): boolean {
+    const game = this.getGame({ gameId });
     if (!game) return false;
     return game.player1DonePlacing && game.player2DonePlacing;
   }
