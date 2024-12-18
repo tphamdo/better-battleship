@@ -33,6 +33,12 @@ socket.on('all done placing', () => {
   state.gameStarted = true;
 })
 
+socket.on('received attack', (coordinate, attackResult) => {
+  console.log('received attack');
+  console.log(coordinate);
+  console.log(attackResult);
+})
+
 socket.on('game over', () => {
   console.log('game over');
   state.gameOver = true;

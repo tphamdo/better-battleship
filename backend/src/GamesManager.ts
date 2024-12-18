@@ -99,8 +99,8 @@ class GamesManager {
     const player = this.getPlayer({ playerId });
     const game = this.getGame({ playerId });
     if (!player || !game) return null;
-    if (player === game.player1) return game.gc.player1Attack(coordinate)
-    else return game.gc.player2Attack(coordinate)
+    if (player === game.player1) return game.gc.player1Attack(coordinate) as AttackResult
+    else return game.gc.player2Attack(coordinate) as AttackResult
   }
 
   print() {
@@ -153,4 +153,5 @@ function createGame({ player1, player2 }: { player1: Player; player2: Player }):
   };
 }
 
+export { AttackResult } from './game/GameController';
 export default new GamesManager();

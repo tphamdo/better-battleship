@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import corsOptions from './corsOptions';
 import { Server as httpServer } from 'http';
-import gm from './GamesManager';
+import gm, { AttackResult } from './GamesManager';
 
 export function startGameServer(server: httpServer) {
   const sockets = new Map<string, Socket>();
@@ -74,7 +74,7 @@ export function startGameServer(server: httpServer) {
       }
 
       const playerId = socket.id;
-      const attackResult = gm.sendAttack({ playerId, coordinate: msg.coordinate });
+      const attackResult: AttackResult | null = gm.sendAttack({ playerId, coordinate: msg.coordinate });
 
       if (!attackResult) {
         return callback({ status: { ok: false } });
@@ -83,6 +83,12 @@ export function startGameServer(server: httpServer) {
       callback({ status: { ok: true }, attackResult });
 
       const gameId = gm.getGameId({ playerId });
+
+      if (attackResult === AttackResult.HIT ||
+        attackResult === AttackResult.MISS) {
+        socket.to(`game: ${gameId}`).emit('received attack', msg.coordinate, attackResult);
+      }
+
       if (gameId && gm.isGameOver({ gameId })) io.to(`game: ${gameId}`).emit('game over');
     });
 
